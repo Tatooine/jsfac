@@ -1,6 +1,24 @@
 var register, resolve, container;
 
 (function(global){
+	
+	var dependencyReader = function(service){
+		
+		var reflected = service.toString();
+
+		var ex = /function\s*.*\s*\((\s*(.*)\s*,?[\s]*)\)/;
+		var matches = ex.exec(reflected);
+
+		var deps = [];
+		var items = matches[1].split(',');
+
+		for(var i in items){
+			deps.push(items[i].trim());
+		}
+
+		return deps;
+	};
+
 	container = function(){
 
 		var registry = {};
@@ -32,12 +50,12 @@ var register, resolve, container;
 		};
 
 		return {
-			register: function(name, dependencies, implementation){
+			register: function(name, implementation){
 				if(!implementation)
 					return registry[name].implementation;
 
 				registry[name] = {
-					dependencies: dependencies || [],
+					dependencies: dependencyReader(implementation),
 					implementation: implementation
 				};
 			},
@@ -48,6 +66,8 @@ var register, resolve, container;
 		};
 		
 	};
+
+	container.dependencyReader = dependencyReader;
 
 	var c = container();
 
