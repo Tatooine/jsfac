@@ -1,8 +1,8 @@
-describe('registration without dependencies', function(){
+describe('a needs nothing', function(){
 	
 	var c = container();
 
-	it('should resolve', function(){
+	it('should create a', function(){
 		c.register('a', [], function(){
 			return 'foo';
 		});		
@@ -67,7 +67,7 @@ describe('a needs b but b needs a', function(){
 	});
 });
 
-describe('a needs b, b needs c but c needs a', function(){
+describe('a needs b, b needs c but c also needs a', function(){
 	
 	var c = container();
 
