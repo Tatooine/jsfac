@@ -2,9 +2,7 @@ jsfac
 =====
 Dependency injection container for javascript.
 
-Tests
-=====
-http://htmlpreview.github.io/?https://github.com/buddhike/jsfac/blob/master/index.htm
+Read our [specs] http://htmlpreview.github.io/?https://github.com/buddhike/jsfac/blob/master/index.htm and you'll get the idea.
 
 Samples
 =======
