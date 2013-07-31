@@ -1,13 +1,13 @@
-var register, resolve, container;
+var register, resolve, container, module;
 
 (function () {
-    var utils = {
+    var _utils = {
         isNullOrWhitespace: function (string) {
             return !string ? true : !/\S/.test(string);
         }
     };
 
-    var dependencyReader = function (service) {
+    var _dependencyReader = function (service) {
 
         var reflected = service.toString();
 
@@ -24,7 +24,7 @@ var register, resolve, container;
         return deps;
     };
 
-    var scope = function (registry) {
+    var _scope = function (registry) {
 
         var sharedInstances = {};
 
@@ -76,24 +76,55 @@ var register, resolve, container;
         };
     };
 
+    var _createModule = function (name, imports, initialization) {
+        var _registry = {};
+
+        var _register = function (name, implementation, options) {
+            if (typeof name !== typeof "string")
+                throw 'Valid name is required.';
+
+            if (_utils.isNullOrWhitespace(name))
+                throw 'Valid name is required.';
+
+            if (!implementation)
+                return _registry[name].implementation;
+
+            _registry[name] = {
+                dependencies: _dependencyReader(implementation),
+                implementation: implementation,
+                options: options || {}
+            };
+        };
+
+        initialization(_register);
+
+        return {
+            name: name,
+            imports: imports,
+            find: function(service){
+                return _registry[service];
+            }
+        };
+    };
+
     container = function () {
 
         var registry = {};
-        var rootScope = scope(registry);
+        var rootScope = _scope(registry);
 
         return {
             register: function (name, implementation, options) {
                 if (typeof name !== typeof "string")
                     throw 'Valid name is required.';
 
-                if (utils.isNullOrWhitespace(name))
+                if (_utils.isNullOrWhitespace(name))
                     throw 'Valid name is required.';
 
                 if (!implementation)
                     return registry[name].implementation;
 
                 registry[name] = {
-                    dependencies: dependencyReader(implementation),
+                    dependencies: _dependencyReader(implementation),
                     implementation: implementation,
                     options: options || {}
                 };
@@ -106,7 +137,8 @@ var register, resolve, container;
 
     };
 
-    container.dependencyReader = dependencyReader;
+    container.dependencyReader = _dependencyReader;
+    container.module = _createModule;
 
     var c = container();
 
