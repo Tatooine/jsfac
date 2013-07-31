@@ -5,4 +5,4 @@ For the time being please read [specs] (http://htmlpreview.github.io/?https://gi
 and you'll get the idea.
 
 ### Samples
-  [KnockoutJS ](http://htmlpreview.github.io/?https://github.com/buddhike/jsfac/blob/master/index.htm)
+  [KnockoutJS ](http://htmlpreview.github.io/?https://github.com/buddhike/jsfac/blob/master/samples/knockoutjs/index.htm)
