@@ -1,8 +1,7 @@
 var register, resolve, container;
 
-(function(global){
-	
-	var dependencyReader = function(service){
+(function () {
+    var dependencyReader = function(service){
 		
 		var reflected = service.toString();
 
