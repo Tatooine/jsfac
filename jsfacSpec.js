@@ -1,78 +1,84 @@
-describe('a needs nothing', function(){
-	
-	var c = container();
+describe('dependency scenarios', function(){
+    describe('a needs nothing', function(){
 
-	it('should create a', function(){
-		c.register('a', function(){
-			return 'foo';
-		});		
-		expect(c.resolve('a')).toBe('foo');
-	});
-});
+        var c = container();
 
-describe('a needs b', function(){
+        it('should create a', function(){
+            c.register('a', function(){
+                return 'foo';
+            });
+            expect(c.resolve('a')).toBe('foo');
+        });
+    });
 
-	var c = container();
+    describe('a needs b', function(){
 
-	it('a gets b', function(){
+        var c = container();
 
-		c.register('b', function(){ return 'foo'; });
-		c.register('a', function(b){ return { b: b}; })
+        it('a gets b', function(){
 
-		expect(c.resolve('a').b).toBe('foo');
-	});
-});
+            c.register('b', function(){ return 'foo'; });
+            c.register('a', function(b){ return { b: b}; })
 
-describe('a needs b and c. b also needs c.', function(){
-	
-	var c = container();
+            expect(c.resolve('a').b).toBe('foo');
+        });
+    });
 
-	c.register('c', function(){ return "cvalue"; });
-	c.register('b', function(c){ return { c: c }; });
+    describe('a needs b and c. b needs c.', function(){
 
-	c.register('a', function(b, c){
-		return {
-			b: b,
-			c: c
-		};
-	});
+        var c = container();
 
-	var a = c.resolve('a');
+        c.register('c', function(){ return {value: "cvalue"}; });
+        c.register('b', function(c){ return { c: c }; });
 
-	it('a gets c', function(){
-		expect(a.c).toBe('cvalue');
-	});
+        c.register('a', function(b, c){
+            return {
+                b: b,
+                c: c
+            };
+        });
 
-	it('a gets b with c', function(){
-		expect(a.b.c).toBe('cvalue');
-	});
-});
+        var a = c.resolve('a');
 
-describe('a needs b but b needs a', function(){
+        it('a gets c', function(){
+            expect(a.c.value).toBe('cvalue');
+        });
 
-	var c = container();
+        it('a gets b with c', function(){
+            expect(a.b.c.value).toBe('cvalue');
+        });
 
-	c.register('a', function(b){});
-	c.register('b', function(a){});
+        it('a\'s c and b\'s c are not the same', function(){
+            expect(a.c).toNotBe(a.b.c);
+        });
+    });
 
-	var r = function(){
-		c.resolve('a');
-	};
+    describe('a needs b but b needs a', function(){
 
-	it('throws an exception', function(){
-		expect(r).toThrow('Cyclic dependency detected.');
-	});
-});
+        var c = container();
 
-describe('a needs b, b needs c but c also needs a', function(){
-	
-	var c = container();
+        c.register('a', function(b){});
+        c.register('b', function(a){});
 
-	c.register('a', function(b) {});
-	c.register('b', function(c) {});
-	c.register('c', function(a) {});
+        var r = function(){
+            c.resolve('a');
+        };
 
-	it('throws an exception due to indirect cycle', function(){
-		expect(function() { c.resolve('a')}).toThrow('Cyclic dependency detected.');
-	});
+        it('throws an exception', function(){
+            expect(r).toThrow('Cyclic dependency detected.');
+        });
+    });
+
+    describe('a needs b, b needs c. c also needs a', function(){
+
+        var c = container();
+
+        c.register('a', function(b) {});
+        c.register('b', function(c) {});
+        c.register('c', function(a) {});
+
+        it('throws an exception due to indirect cycle', function(){
+            expect(function() { c.resolve('a')}).toThrow('Cyclic dependency detected.');
+        });
+    });
 });
