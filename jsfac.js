@@ -1,6 +1,12 @@
 var register, resolve, container;
 
 (function () {
+    var utils = {
+        isNullOrWhitespace: function(string){
+            return !string ? true : !/\S/.test(string);
+        }
+    };
+
     var dependencyReader = function(service){
 		
 		var reflected = service.toString();
@@ -77,6 +83,12 @@ var register, resolve, container;
 
 		return {
 			register: function(name, implementation, options){
+                if(typeof name !== typeof "string")
+                    throw 'Valid name is required.';
+
+                if(utils.isNullOrWhitespace(name))
+                    throw 'Valid name is required.';
+
 				if(!implementation)
 					return registry[name].implementation;
 
