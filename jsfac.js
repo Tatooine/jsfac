@@ -24,7 +24,7 @@ var register, resolve, container;
 
 		var getOrCreate = function(name, registration, factory){
 			
-			if(registration.options.scope !== 'scope'){
+			if(registration.options.sharingMode !== 'single'){
 				return factory();
 			}
 

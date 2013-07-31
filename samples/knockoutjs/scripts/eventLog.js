@@ -10,4 +10,4 @@ register('eventLog', function(){
 			});
 		}
 	};
-}, { scope: 'scope'});
+}, { sharingMode: 'single'});
