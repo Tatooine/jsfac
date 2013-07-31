@@ -22,4 +22,4 @@ describe('function definition with whitespace between argument ids', function(){
 		expect(container.dependencyReader(function(alpha , 	beta	 	){
 		})).toContain('alpha', 'beta');
 	});	
-})
+});
