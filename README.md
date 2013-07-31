@@ -1,7 +1,8 @@
-#jsfac
-Dependency injection container for javascript.
+# jsfac
+Low ceremony dependency injection container for javascript.
 
-Read our [specs] (http://htmlpreview.github.io/?https://github.com/buddhike/jsfac/blob/master/index.htm) and you'll get the idea.
+For the time being please read [specs] (http://htmlpreview.github.io/?https://github.com/buddhike/jsfac/blob/master/index.htm) 
+and you'll get the idea.
 
-##Samples
+### Samples
   [KnockoutJS ](http://htmlpreview.github.io/?https://github.com/buddhike/jsfac/blob/master/index.htm)
