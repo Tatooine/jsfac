@@ -113,4 +113,4 @@ var register, resolve, container;
     register = c.register;
     resolve = c.resolve;
 
-})(this); 
+})();
