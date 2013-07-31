@@ -2,115 +2,115 @@ var register, resolve, container;
 
 (function () {
     var utils = {
-        isNullOrWhitespace: function(string){
+        isNullOrWhitespace: function (string) {
             return !string ? true : !/\S/.test(string);
         }
     };
 
-    var dependencyReader = function(service){
-		
-		var reflected = service.toString();
+    var dependencyReader = function (service) {
 
-		var ex = /function\s*.*\s*\((\s*(.*)\s*,?[\s]*)\)/;
-		var matches = ex.exec(reflected);
+        var reflected = service.toString();
 
-		var deps = [];
-		var items = matches[1].split(',');
+        var ex = /function\s*.*\s*\((\s*(.*)\s*,?[\s]*)\)/;
+        var matches = ex.exec(reflected);
 
-		for(var i in items){
-			deps.push(items[i].trim());
-		}
+        var deps = [];
+        var items = matches[1].split(',');
 
-		return deps;
-	};
+        for (var i in items) {
+            deps.push(items[i].trim());
+        }
 
-	var scope = function(registry){
+        return deps;
+    };
 
-		var sharedInstances = {};
+    var scope = function (registry) {
 
-		var getOrCreate = function(name, registration, factory){
-			
-			if(registration.options.sharingMode !== 'single'){
-				return factory();
-			}
+        var sharedInstances = {};
 
-			if(typeof sharedInstances[name] != 'undefined')
-				return sharedInstances[name];
+        var getOrCreate = function (name, registration, factory) {
 
-			sharedInstances[name] = factory();
-			return sharedInstances[name];
-		};
+            if (registration.options.sharingMode !== 'single') {
+                return factory();
+            }
 
-		var resolveCore = function(name, pending){
-			if(pending[name])
-				throw 'Cyclic dependency detected.';
+            if (typeof sharedInstances[name] != 'undefined')
+                return sharedInstances[name];
 
-			var r = registry[name];
-			
-			if(!r) return r;
+            sharedInstances[name] = factory();
+            return sharedInstances[name];
+        };
 
-			if(r.dependencies.length == 0)
-				getOrCreate(name, r, r.implementation);
+        var resolveCore = function (name, pending) {
+            if (pending[name])
+                throw 'Cyclic dependency detected.';
 
-			pending[name] = true;
-			
-			var deps = [];
-			
-			for(var dep in r.dependencies){
-				deps.push(resolveCore(r.dependencies[dep], pending));
-			}
+            var r = registry[name];
 
-			var service = getOrCreate(name, r, function(){
-				return r.implementation.apply(null, deps);	
-			}); 
-		
-			pending[name] = false;
+            if (!r) return r;
 
-			return service;
-		};
+            if (r.dependencies.length == 0)
+                getOrCreate(name, r, r.implementation);
 
-		return {
-			resolve: function(name){
-				return resolveCore(name, {});
-			}
-		};
-	};
+            pending[name] = true;
 
-	container = function(){
+            var deps = [];
 
-		var registry = {};
-		var rootScope = scope(registry);
+            for (var dep in r.dependencies) {
+                deps.push(resolveCore(r.dependencies[dep], pending));
+            }
 
-		return {
-			register: function(name, implementation, options){
-                if(typeof name !== typeof "string")
+            var service = getOrCreate(name, r, function () {
+                return r.implementation.apply(null, deps);
+            });
+
+            pending[name] = false;
+
+            return service;
+        };
+
+        return {
+            resolve: function (name) {
+                return resolveCore(name, {});
+            }
+        };
+    };
+
+    container = function () {
+
+        var registry = {};
+        var rootScope = scope(registry);
+
+        return {
+            register: function (name, implementation, options) {
+                if (typeof name !== typeof "string")
                     throw 'Valid name is required.';
 
-                if(utils.isNullOrWhitespace(name))
+                if (utils.isNullOrWhitespace(name))
                     throw 'Valid name is required.';
 
-				if(!implementation)
-					return registry[name].implementation;
+                if (!implementation)
+                    return registry[name].implementation;
 
-				registry[name] = {
-					dependencies: dependencyReader(implementation),
-					implementation: implementation,
-					options: options || {}
-				};
-			},
+                registry[name] = {
+                    dependencies: dependencyReader(implementation),
+                    implementation: implementation,
+                    options: options || {}
+                };
+            },
 
-			resolve: function(name){
-				return rootScope.resolve(name);
-			}
-		};
-		
-	};
+            resolve: function (name) {
+                return rootScope.resolve(name);
+            }
+        };
 
-	container.dependencyReader = dependencyReader;
+    };
 
-	var c = container();
+    container.dependencyReader = dependencyReader;
 
-	register = c.register;
-	resolve = c.resolve;
+    var c = container();
+
+    register = c.register;
+    resolve = c.resolve;
 
 })(this); 

@@ -1,22 +1,22 @@
-describe('instance scoping', function(){
-    describe('a and b both need the same instance of c', function(){
-        it('both should be given same c', function(){
+describe('instance scoping', function () {
+    describe('a and b both need the same instance of c', function () {
+        it('both should be given same c', function () {
             var c = container();
             var i = 0;
 
-            c.register('a', function(c){
+            c.register('a', function (c) {
                 return {
                     c: c
                 };
             });
 
-            c.register('b', function(c){
+            c.register('b', function (c) {
                 return {
                     c: c
                 };
             });
 
-            c.register('c', function(){
+            c.register('c', function () {
                 return i++;
             }, { sharingMode: 'single' });
 
