@@ -19,9 +19,22 @@ var register, resolve, container;
 		return deps;
 	};
 
-	container = function(){
+	var scope = function(registry){
 
-		var registry = {};
+		var sharedInstances = {};
+
+		var getOrCreate = function(name, registration, factory){
+			
+			if(registration.options.scope !== 'scope'){
+				return factory();
+			}
+
+			if(typeof sharedInstances[name] != 'undefined')
+				return sharedInstances[name];
+
+			sharedInstances[name] = factory();
+			return sharedInstances[name];
+		};
 
 		var resolveCore = function(name, pending){
 			if(pending[name])
@@ -32,7 +45,7 @@ var register, resolve, container;
 			if(!r) return r;
 
 			if(r.dependencies.length == 0)
-				return r.implementation();
+				getOrCreate(name, r, r.implementation);
 
 			pending[name] = true;
 			
@@ -42,26 +55,41 @@ var register, resolve, container;
 				deps.push(resolveCore(r.dependencies[dep], pending));
 			}
 
-			var service = r.implementation.apply(null, deps);
-
+			var service = getOrCreate(name, r, function(){
+				return r.implementation.apply(null, deps);	
+			}); 
+		
 			pending[name] = false;
 
 			return service;
 		};
 
 		return {
-			register: function(name, implementation){
+			resolve: function(name){
+				return resolveCore(name, {});
+			}
+		};
+	};
+
+	container = function(){
+
+		var registry = {};
+		var rootScope = scope(registry);
+
+		return {
+			register: function(name, implementation, options){
 				if(!implementation)
 					return registry[name].implementation;
 
 				registry[name] = {
 					dependencies: dependencyReader(implementation),
-					implementation: implementation
+					implementation: implementation,
+					options: options || {}
 				};
 			},
 
 			resolve: function(name){
-				return resolveCore(name, {});
+				return rootScope.resolve(name);
 			}
 		};
 		

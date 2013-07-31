@@ -17,7 +17,7 @@ describe('a and b both need the same instance of c', function(){
 
 		c.register('c', function(){
 			return i++;
-		}, { scope: 'instancePerScope' });
+		}, { scope: 'scope' });
 
 		var a = c.resolve('a');
 		var b = c.resolve('b');
