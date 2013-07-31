@@ -34,7 +34,9 @@
               <h4>Monitor</h4>
               <div data-bind="foreach: events">
                 <div class="row">
-                  <div data-bind="text: $data" class="label label-info"/>                  
+                    <div class="col-lg-4">
+                        <div data-bind="text: message, css: { 'label-info': source == 'fooWidget', 'label-warning': source == 'barWidget' }" class="label"></div>
+                    </div>
                 </div>
               </div>
             </div>
