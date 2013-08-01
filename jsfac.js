@@ -8,11 +8,17 @@ var jsfac = (function (self) {
         }
     };
 
+    // Scope has the ability to resolve a specified service
+    // based on modules configured.
     var _scope = function (modules) {
 
         var sharedInstances = {};
 
-        var getOrCreate = function (name, registration, factory) {
+        var _fqsn = function (module, service) {
+            return module.name + '-' + service;
+        };
+
+        var _getOrCreate = function (name, registration, factory) {
 
             if (registration.options.sharingMode !== 'single') {
                 return factory();
@@ -25,9 +31,6 @@ var jsfac = (function (self) {
             return sharedInstances[name];
         };
 
-        var _fqsn = function (module, service) {
-            return module.name + '-' + service;
-        };
 
         var _findRegistration = function (module, service) {
 
@@ -66,7 +69,7 @@ var jsfac = (function (self) {
             var r = ctx.match;
 
             if (r.dependencies.length == 0)
-                return getOrCreate(fqsn, r, r.implementation);
+                return _getOrCreate(fqsn, r, r.implementation);
 
             pending[fqsn] = true;
 
@@ -76,7 +79,7 @@ var jsfac = (function (self) {
                 deps.push(resolveCore(ctx.module, r.dependencies[dep], pending));
             }
 
-            var service = getOrCreate(fqsn, r, function () {
+            var service = _getOrCreate(fqsn, r, function () {
                 return r.implementation.apply(null, deps);
             });
 
