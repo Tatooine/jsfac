@@ -104,11 +104,8 @@ var jsfac = (function (self) {
         var _registry = {};
 
         var _register = function (name, dependencies, implementation, options) {
-            if (typeof name !== typeof "string")
-                throw 'Valid name is required.';
-
-            if (_utils.isNullOrWhitespace(name))
-                throw 'Valid name is required.';
+            if (typeof name !== typeof "string") throw 'Valid name is required.';
+            if (_utils.isNullOrWhitespace(name)) throw 'Valid name is required.';
 
             _registry[name] = {
                 name: name,
@@ -123,10 +120,10 @@ var jsfac = (function (self) {
         return {
             name: name,
             imports: imports,
+            register: _register,
             find: function (service) {
                 return _registry[service];
-            },
-            register: _register
+            }
         };
     };
 
@@ -139,10 +136,8 @@ var jsfac = (function (self) {
             module: function (name, imports, initializer) {
 
                 if (_utils.isNullOrWhitespace(name)) throw 'Valid name is required.';
-
-                if (typeof imports == 'undefined' && typeof initializer == 'undefined') {
-                    return modules[name];
-                }
+                if(typeof imports != typeof []) throw "Argument imports collection must be an array";
+                if(typeof initializer != 'function') throw "Argument initializer must be function";
 
                 var existing = modules[name];
 
@@ -152,6 +147,7 @@ var jsfac = (function (self) {
                     return m;
                 }
 
+                // update existing module with new imports
                 for (var i in imports) {
                     if (existing.imports.indexOf(imports[i]) < 0) {
                         existing.imports.push(imports[i]);
