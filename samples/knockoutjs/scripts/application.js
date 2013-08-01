@@ -10,6 +10,3 @@ jsfac.module('application', ['dashboard', 'diagnostics'], function (register) {
     });
 
 });
-
-
-ko.applyBindings(jsfac.resolve('application', 'main'));
