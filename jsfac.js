@@ -56,7 +56,7 @@ var jsfac = (function (self) {
             return r;
         };
 
-        var resolveCore = function (module, service, pending) {
+        var _resolveCore = function (module, service, pending) {
 
             var ctx = _findRegistration(module, service);
             if (!ctx.match) return ctx.match;
@@ -76,7 +76,7 @@ var jsfac = (function (self) {
             var deps = [];
 
             for (var dep in r.dependencies) {
-                deps.push(resolveCore(ctx.module, r.dependencies[dep], pending));
+                deps.push(_resolveCore(ctx.module, r.dependencies[dep], pending));
             }
 
             var service = _getOrCreate(fqsn, r, function () {
@@ -98,7 +98,7 @@ var jsfac = (function (self) {
                 var root = m.find(service);
                 if (!root) return root;
 
-                return resolveCore(m, service, {});
+                return _resolveCore(m, service, {});
             }
         };
     };
