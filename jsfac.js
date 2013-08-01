@@ -2,6 +2,9 @@ var jsfac = (function (self) {
     var _utils = {
         isNullOrWhitespace: function (string) {
             return !string ? true : !/\S/.test(string);
+        },
+        undefined: function () {
+            return;
         }
     };
 
@@ -162,6 +165,16 @@ var jsfac = (function (self) {
 
             resolve: function (module, service) {
                 return rootScope.resolve(module, service);
+            },
+
+            // Returns the actual definition of a service in the specified module.
+            // Useful when writing tests or user needs manual control over construction.
+            // No dependencies are resolved if you manually invoke value returned by this
+            // function.
+            def: function (module, name) {
+                var module = modules[module] || _utils.undefined();
+                var registration = module ? module.find(name) : module;
+                return registration ? registration.implementation : registration;
             }
         };
 
@@ -170,6 +183,7 @@ var jsfac = (function (self) {
     var c = container();
     self.module = c.module;
     self.resolve = c.resolve;
+    self.def = c.def;
 
     self.container = container;
 
