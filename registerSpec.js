@@ -1,9 +1,19 @@
 describe('registration', function () {
+    var m;
+
+    beforeEach(function () {
+        m = jsfac.container().module('m', [], function () {
+        });
+    });
+
     describe('register without a name', function () {
+
+        var m = container().module('m', [], function () {
+        });
+
         it('not allowed', function () {
-            var c = container();
             expect(function () {
-                c.register(null, function () {
+                m.register(null, [], function () {
                 })
             }).toThrow('Valid name is required.');
         });
@@ -11,9 +21,8 @@ describe('registration', function () {
 
     describe('name with only whitespaces', function () {
         it('not allowed', function () {
-            var c = container();
             expect(function () {
-                c.register('  \t', function () {
+                m.register('  \t', [], function () {
                 })
             }).toThrow('Valid name is required.');
         });
@@ -21,9 +30,8 @@ describe('registration', function () {
 
     describe('register an anonymous function', function () {
         it('not allowed', function () {
-            var c = container();
             expect(function () {
-                c.register(function () {
+                m.register(function () {
                 })
             }).toThrow('Valid name is required.');
         });

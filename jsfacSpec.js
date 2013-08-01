@@ -1,52 +1,59 @@
 describe('dependency scenarios', function () {
-    describe('a needs nothing', function () {
+    describe('a in module m needs nothing', function () {
 
-        var c = container();
+        var c = jsfac.container();
+        c.module('m', [], function (register) {
+            register('a', [], function () {
+                return 'foo';
+            });
+        });
 
         it('should create a', function () {
-            c.register('a', function () {
-                return 'foo';
-            });
-            expect(c.resolve('a')).toBe('foo');
+            expect(c.resolve('m', 'a')).toBe('foo');
         });
     });
 
-    describe('a needs b', function () {
+    describe('m.a needs m.b', function () {
 
-        var c = container();
+        var c = jsfac.container();
+        c.module('m', [], function (register) {
+            register('a', ['b'], function (b) {
+                return {b: b};
+            });
 
-        it('a gets b', function () {
-
-            c.register('b', function () {
+            register('b', [], function () {
                 return 'foo';
             });
-            c.register('a', function (b) {
-                return { b: b};
-            })
+        });
 
-            expect(c.resolve('a').b).toBe('foo');
+        it('m.a is given to m.b', function () {
+            expect(c.resolve('m', 'a').b).toBe('foo');
         });
     });
 
-    describe('a needs b and c. b needs c.', function () {
+    describe('m.a needs m.b and m.c. m.b needs m.c.', function () {
 
-        var c = container();
+        var c = jsfac.container();
 
-        c.register('c', function () {
-            return {value: "cvalue"};
+        c.module('m', [], function (register) {
+
+            register('c', [], function () {
+                return {value: "cvalue"};
+            });
+            register('b', ['c'], function (c) {
+                return { c: c };
+            });
+
+            register('a', ['b', 'c'], function (b, c) {
+                return {
+                    b: b,
+                    c: c
+                };
+            });
+
         });
-        c.register('b', function (c) {
-            return { c: c };
-        });
 
-        c.register('a', function (b, c) {
-            return {
-                b: b,
-                c: c
-            };
-        });
-
-        var a = c.resolve('a');
+        var a = c.resolve('m', 'a');
 
         it('a gets c', function () {
             expect(a.c.value).toBe('cvalue');
@@ -61,17 +68,22 @@ describe('dependency scenarios', function () {
         });
     });
 
-    describe('a needs b but b needs a', function () {
+    describe('m.a needs m.b but m.b needs m.a', function () {
 
-        var c = container();
+        var c = jsfac.container();
 
-        c.register('a', function (b) {
+        c.module('m', [], function (register) {
+
+            register('a', ['b'], function (b) {
+            });
+            register('b', ['a'], function (a) {
+            });
+
         });
-        c.register('b', function (a) {
-        });
+
 
         var r = function () {
-            c.resolve('a');
+            c.resolve('m', 'a');
         };
 
         it('throws an exception', function () {
@@ -79,20 +91,25 @@ describe('dependency scenarios', function () {
         });
     });
 
-    describe('a needs b, b needs c. c also needs a', function () {
+    describe('m-a needs m-b, m-b needs m-c. m-c also needs m-a', function () {
 
-        var c = container();
+        var c = jsfac.container();
 
-        c.register('a', function (b) {
-        });
-        c.register('b', function (c) {
-        });
-        c.register('c', function (a) {
-        });
+        c.module('m', [], function (register) {
+
+            register('a', ['b'], function (b) {
+            });
+            register('b', ['c'], function (c) {
+            });
+            register('c', ['a'], function (a) {
+            });
+
+        })
+
 
         it('throws an exception due to indirect cycle', function () {
             expect(function () {
-                c.resolve('a')
+                c.resolve('m', 'a')
             }).toThrow('Cyclic dependency detected.');
         });
     });

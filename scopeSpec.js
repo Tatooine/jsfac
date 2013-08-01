@@ -1,27 +1,31 @@
 describe('instance scoping', function () {
-    describe('a and b both need the same instance of c', function () {
-        it('both should be given same c', function () {
-            var c = container();
+    describe('m-a and m-b both need the same instance of m-c', function () {
+        it('both should be given same m.c', function () {
+            var c = jsfac.container();
             var i = 0;
 
-            c.register('a', function (c) {
-                return {
-                    c: c
-                };
+            c.module('m', [], function (register) {
+
+                register('a', ['c'], function (c) {
+                    return {
+                        c: c
+                    };
+                });
+
+                register('b', ['c'], function (c) {
+                    return {
+                        c: c
+                    };
+                });
+
+                register('c', [], function () {
+                    return i++;
+                }, { sharingMode: 'single' });
+
             });
 
-            c.register('b', function (c) {
-                return {
-                    c: c
-                };
-            });
-
-            c.register('c', function () {
-                return i++;
-            }, { sharingMode: 'single' });
-
-            var a = c.resolve('a');
-            var b = c.resolve('b');
+            var a = c.resolve('m', 'a');
+            var b = c.resolve('m', 'b');
 
             expect(a.c).toBe(b.c);
         });

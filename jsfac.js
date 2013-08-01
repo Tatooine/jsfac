@@ -1,30 +1,11 @@
-var register, resolve, container, module;
-
-(function () {
+var jsfac = (function (self) {
     var _utils = {
         isNullOrWhitespace: function (string) {
             return !string ? true : !/\S/.test(string);
         }
     };
 
-    var _dependencyReader = function (service) {
-
-        var reflected = service.toString();
-
-        var ex = /function\s*.*\s*\((\s*(.*)\s*,?[\s]*)\)/;
-        var matches = ex.exec(reflected);
-
-        var deps = [];
-        var items = matches[1].split(',');
-
-        for (var i in items) {
-            deps.push(items[i].trim());
-        }
-
-        return deps;
-    };
-
-    var _scope = function (registry) {
+    var _scope = function (modules) {
 
         var sharedInstances = {};
 
@@ -41,108 +22,157 @@ var register, resolve, container, module;
             return sharedInstances[name];
         };
 
-        var resolveCore = function (name, pending) {
-            if (pending[name])
+        var _fqsn = function (module, service) {
+            return module.name + '-' + service;
+        };
+
+        var _findRegistration = function (module, service) {
+
+            var r = {
+                module: module,
+                match: module.find(service)
+            };
+
+            for (var i in module.imports) {
+
+                var imported = modules[module.imports[i]] || {};
+                var next = imported.find(service);
+
+                if (!next) continue;
+
+                if (r.match)
+                    throw 'An ambiguous resolution';
+
+                r.module = imported;
+                r.match = next;
+            }
+
+            return r;
+        };
+
+        var resolveCore = function (module, service, pending) {
+
+            var ctx = _findRegistration(module, service);
+            if (!ctx.match) return ctx.match;
+
+            var fqsn = _fqsn(ctx.module, service);
+
+            if (pending[fqsn])
                 throw 'Cyclic dependency detected.';
 
-            var r = registry[name];
-
-            if (!r) return r;
+            var r = ctx.match;
 
             if (r.dependencies.length == 0)
-                getOrCreate(name, r, r.implementation);
+                return getOrCreate(fqsn, r, r.implementation);
 
-            pending[name] = true;
+            pending[fqsn] = true;
 
             var deps = [];
 
             for (var dep in r.dependencies) {
-                deps.push(resolveCore(r.dependencies[dep], pending));
+                deps.push(resolveCore(ctx.module, r.dependencies[dep], pending));
             }
 
-            var service = getOrCreate(name, r, function () {
+            var service = getOrCreate(fqsn, r, function () {
                 return r.implementation.apply(null, deps);
             });
 
-            pending[name] = false;
+            pending[fqsn] = false;
 
             return service;
         };
 
         return {
-            resolve: function (name) {
-                return resolveCore(name, {});
+            resolve: function (module, service) {
+                var m = modules[module] || {
+                    find: function () {
+                    }
+                };
+
+                var root = m.find(service);
+                if (!root) return root;
+
+                return resolveCore(m, service, {});
             }
         };
     };
 
-    var _createModule = function (name, imports, initialization) {
+    var _createModule = function (name, imports, initializer) {
         var _registry = {};
 
-        var _register = function (name, implementation, options) {
+        var _register = function (name, dependencies, implementation, options) {
             if (typeof name !== typeof "string")
                 throw 'Valid name is required.';
 
             if (_utils.isNullOrWhitespace(name))
                 throw 'Valid name is required.';
 
-            if (!implementation)
-                return _registry[name].implementation;
-
             _registry[name] = {
-                dependencies: _dependencyReader(implementation),
+                name: name,
+                dependencies: dependencies,
                 implementation: implementation,
                 options: options || {}
             };
         };
 
-        initialization(_register);
+        initializer(_register);
 
         return {
             name: name,
             imports: imports,
-            find: function(service){
+            find: function (service) {
                 return _registry[service];
-            }
+            },
+            register: _register
         };
     };
 
     container = function () {
 
-        var registry = {};
-        var rootScope = _scope(registry);
+        var modules = {};
+        var rootScope = _scope(modules);
 
         return {
-            register: function (name, implementation, options) {
-                if (typeof name !== typeof "string")
-                    throw 'Valid name is required.';
+            module: function (name, imports, initializer) {
 
-                if (_utils.isNullOrWhitespace(name))
-                    throw 'Valid name is required.';
+                if (_utils.isNullOrWhitespace(name)) throw 'Valid name is required.';
 
-                if (!implementation)
-                    return registry[name].implementation;
+                if (typeof imports == 'undefined' && typeof initializer == 'undefined') {
+                    return modules[name];
+                }
 
-                registry[name] = {
-                    dependencies: _dependencyReader(implementation),
-                    implementation: implementation,
-                    options: options || {}
-                };
+                var existing = modules[name];
+
+                if (!existing) {
+                    var m = _createModule(name, imports, initializer);
+                    modules[name] = m;
+                    return m;
+                }
+
+                for (var i in imports) {
+                    if (existing.imports.indexOf(imports[i]) < 0) {
+                        existing.imports.push(imports[i]);
+                    }
+                }
+
+                initializer(existing.register);
+
+                return existing;
             },
 
-            resolve: function (name) {
-                return rootScope.resolve(name);
+            resolve: function (module, service) {
+                return rootScope.resolve(module, service);
             }
         };
 
     };
 
-    container.dependencyReader = _dependencyReader;
-    container.module = _createModule;
-
     var c = container();
+    self.module = c.module;
+    self.resolve = c.resolve;
 
-    register = c.register;
-    resolve = c.resolve;
+    self.container = container;
 
-})();
+    return self;
+
+})(jsfac || {});
