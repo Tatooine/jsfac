@@ -9,7 +9,7 @@ var jsfac = (function (self) {
         },
 
         isUndefined: function(ob){
-            return typeof ob !== 'undefined';
+            return typeof ob === 'undefined';
         }
     };
 
@@ -102,15 +102,12 @@ var jsfac = (function (self) {
         };
     };
 
-    var _createModule = function (name, imports, initializer) {
+    var _createModule = function (name, imports) {
         var _registry = {};
 
         var _register = function (name, dependencies, implementation, options) {
-            if (_utils.isString(name))
-                throw 'Valid name is required.';
-
-            if (_utils.isNullOrWhitespace(name))
-                throw 'Valid name is required.';
+            if (_utils.isString(name) || _utils.isNullOrWhitespace(name))
+                throw new Error('Valid name is required.');
 
             _registry[name] = {
                 name: name,
@@ -119,9 +116,7 @@ var jsfac = (function (self) {
                 options: options || {}
             };
         };
-
-        initializer(_register);
-
+        
         return {
             name: name,
             imports: imports,
@@ -140,23 +135,22 @@ var jsfac = (function (self) {
         return {
             module: function (name, imports, initializer) {
 
-                if (_utils.isNullOrWhitespace(name)) throw 'Valid name is required.';
+                if (_utils.isNullOrWhitespace(name)) throw new Error('Valid name is required.');
 
-                if (typeof imports == 'undefined' && typeof initializer == 'undefined') {
+                if (_utils.isUndefined(imports) && _utils.isUndefined(initializer)) {
                     return modules[name];
                 }
 
                 var existing = modules[name];
 
                 if (!existing) {
-                    var m = _createModule(name, imports, initializer);
-                    modules[name] = m;
-                    return m;
-                }
+                    existing = modules[name] = _createModule(name, imports);
 
-                for (var i in imports) {
-                    if (existing.imports.indexOf(imports[i]) < 0) {
-                        existing.imports.push(imports[i]);
+                } else {
+                    for (var i in imports) {
+                        if (existing.imports.indexOf(imports[i]) < 0) {
+                            existing.imports.push(imports[i]);
+                        }
                     }
                 }
 
@@ -177,7 +171,9 @@ var jsfac = (function (self) {
                 var module = modules[module] || _utils.undefined;
                 var registration = module ? module.find(name) : module;
                 return registration ? registration.implementation : registration;
-            }
+            },
+
+            debug : debug
         };
 
     };
