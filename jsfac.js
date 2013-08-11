@@ -3,8 +3,13 @@ var jsfac = (function (self) {
         isNullOrWhitespace: function (string) {
             return !string ? true : !/\S/.test(string);
         },
-        undefined: function () {
-            return;
+        /*undefined*/
+        isString : function(obj){
+            return typeof obj !== typeof "string";
+        },
+
+        isUndefined: function(ob){
+            return typeof ob !== 'undefined';
         }
     };
 
@@ -18,7 +23,7 @@ var jsfac = (function (self) {
                 return factory();
             }
 
-            if (typeof sharedInstances[name] != 'undefined')
+            if (_utils.isUndefined(sharedInstances[name]))
                 return sharedInstances[name];
 
             sharedInstances[name] = factory();
@@ -87,12 +92,9 @@ var jsfac = (function (self) {
 
         return {
             resolve: function (module, service) {
-                var m = modules[module] || {
-                    find: function () {
-                    }
-                };
+                var m = modules[module];
 
-                var root = m.find(service);
+                var root = m && m.find(service);
                 if (!root) return root;
 
                 return resolveCore(m, service, {});
@@ -104,7 +106,7 @@ var jsfac = (function (self) {
         var _registry = {};
 
         var _register = function (name, dependencies, implementation, options) {
-            if (typeof name !== typeof "string")
+            if (_utils.isString(name))
                 throw 'Valid name is required.';
 
             if (_utils.isNullOrWhitespace(name))
@@ -172,7 +174,7 @@ var jsfac = (function (self) {
             // No dependencies are resolved if you manually invoke value returned by this
             // function.
             def: function (module, name) {
-                var module = modules[module] || _utils.undefined();
+                var module = modules[module] || _utils.undefined;
                 var registration = module ? module.find(name) : module;
                 return registration ? registration.implementation : registration;
             }
