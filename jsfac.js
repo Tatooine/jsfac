@@ -130,7 +130,7 @@ var jsfac = (function (self) {
         };
     };
 
-    container = function () {
+    var container = function () {
 
         var modules = {};
         var rootScope = _scope(modules);
