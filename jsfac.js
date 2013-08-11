@@ -10,6 +10,42 @@ var jsfac = (function (self) {
 
         isUndefined: function(ob){
             return typeof ob === 'undefined';
+        },
+
+        toArray: function(obj){
+            return Array.prototype.slice.apply(obj);
+        },
+
+        extend: function(target, source){
+            target = target || {};
+
+            for(var p in source) {
+                if(source.hasOwnProperty(p) && source[p]) {
+                    target[p] = source[p];
+                }
+            }
+
+            return target;
+        },
+
+        forEach: function(obj, iterator) {
+            if(_utils.isUndefined(obj.length)) {
+                for(var key in obj) {
+                    if(obj.hasOwnProperty(key)) {
+                        iterator.call(null, obj[key], key);
+                    }
+                }
+            } else {
+                if(Array.prototype.forEach) {
+                    Array.prototype.forEach.call(obj, iterator);
+                } else {
+                    for(var i=0; i<obj.length; i++) {
+                        iterator.call(null, obj[i], i);
+                    }
+                }
+            }
+
+            return obj;
         }
     };
 
@@ -102,35 +138,76 @@ var jsfac = (function (self) {
         };
     };
 
-    var _createModule = function (name, imports) {
+    var _createModule = function (modName, imports, debug) {
         var _registry = {};
 
         var _register = function (name, dependencies, implementation, options) {
             if (_utils.isString(name) || _utils.isNullOrWhitespace(name))
                 throw new Error('Valid name is required.');
 
-            _registry[name] = {
-                name: name,
-                dependencies: dependencies,
-                implementation: implementation,
-                options: options || {}
-            };
+            if(!debug) {
+                _registry[name] = {
+                    name: name,
+                    dependencies: dependencies,
+                    implementation: implementation,
+                    options: options || {}
+                };
+            } else {
+                _registry[name] = {
+                    name: name,
+                    dependencies: dependencies,
+                    implementation: function() {
+                        var deps = _utils.toArray(arguments);
+                        return { module:modName, name:name, deps:deps };
+                    },
+                    options: {}
+                };
+            }
         };
         
         return {
-            name: name,
+            name: modName,
             imports: imports,
             find: function (service) {
                 return _registry[service];
             },
-            register: _register
+            register: _register,
+            registry : _registry
+        };
+    };
+
+    var _debug = function() {
+        var modules = {};
+        var rootScope = _scope(modules);
+
+        return {
+            resolve: function (module, service) {
+                return rootScope.resolve(module, service);
+            },
+
+            graph : function() {
+                var r = [];
+                _utils.forEach(modules, function(module){
+                    _utils.forEach(module.registry, function(service){
+                        r.push(rootScope.resolve(module.name, service.name));
+                    });
+                });
+
+                return r;
+            },
+
+            createModule : function(name, imports) {
+                modules[name] = _createModule(name, imports, true);
+            },
+
+            modules: modules
         };
     };
 
     var container = function () {
-
-        var modules = {};
+        var modules = {};        
         var rootScope = _scope(modules);
+        var debug = _debug();
 
         return {
             module: function (name, imports, initializer) {
@@ -145,6 +222,7 @@ var jsfac = (function (self) {
 
                 if (!existing) {
                     existing = modules[name] = _createModule(name, imports);
+                    debug.createModule(name, imports);
 
                 } else {
                     for (var i in imports) {
@@ -154,7 +232,10 @@ var jsfac = (function (self) {
                     }
                 }
 
-                initializer(existing.register);
+                initializer(function(){
+                    existing.register.apply(existing, arguments);
+                    debug.modules[name].register.apply(existing, arguments);
+                });
 
                 return existing;
             },
@@ -173,16 +254,15 @@ var jsfac = (function (self) {
                 return registration ? registration.implementation : registration;
             },
 
-            debug : debug
+            debug: {
+                resolve: debug.resolve,
+                graph : debug.graph
+            }
         };
-
     };
 
     var c = container();
-    self.module = c.module;
-    self.resolve = c.resolve;
-    self.def = c.def;
-
+    _utils.extend(self, c);
     self.container = container;
 
     return self;
