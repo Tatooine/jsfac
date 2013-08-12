@@ -2,7 +2,7 @@ describe('instance scoping', function () {
     describe('m-a and m-b both need the same instance of m-c', function () {
         it('both should be given same m.c', function () {
             var c = jsfac.container();
-            var i = 0;
+            var i = 100;
 
             c.module('m', [], function (register) {
 
@@ -27,7 +27,8 @@ describe('instance scoping', function () {
             var a = c.resolve('m', 'a');
             var b = c.resolve('m', 'b');
 
-            expect(a.c).toBe(b.c);
+            expect(a.c).toBe(100);
+            expect(b.c).toBe(100);
         });
     });
 });
