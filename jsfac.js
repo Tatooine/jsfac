@@ -3,8 +3,49 @@ var jsfac = (function (self) {
         isNullOrWhitespace: function (string) {
             return !string ? true : !/\S/.test(string);
         },
-        undefined: function () {
-            return;
+        /*undefined*/
+        isString : function(obj){
+            return typeof obj !== typeof "string";
+        },
+
+        isUndefined: function(ob){
+            return typeof ob === 'undefined';
+        },
+
+        toArray: function(obj){
+            return Array.prototype.slice.apply(obj);
+        },
+
+        extend: function(target, source){
+            target = target || {};
+
+            for(var p in source) {
+                if(source.hasOwnProperty(p) && source[p]) {
+                    target[p] = source[p];
+                }
+            }
+
+            return target;
+        },
+
+        forEach: function(obj, iterator) {
+            if(_utils.isUndefined(obj.length)) {
+                for(var key in obj) {
+                    if(obj.hasOwnProperty(key)) {
+                        iterator.call(null, obj[key], key);
+                    }
+                }
+            } else {
+                if(Array.prototype.forEach) {
+                    Array.prototype.forEach.call(obj, iterator);
+                } else {
+                    for(var i=0; i<obj.length; i++) {
+                        iterator.call(null, obj[i], i);
+                    }
+                }
+            }
+
+            return obj;
         }
     };
 
@@ -24,7 +65,7 @@ var jsfac = (function (self) {
                 return factory();
             }
 
-            if (typeof sharedInstances[name] != 'undefined')
+            if (_utils.isUndefined(sharedInstances[name]))
                 return sharedInstances[name];
 
             sharedInstances[name] = factory();
@@ -90,12 +131,9 @@ var jsfac = (function (self) {
 
         return {
             resolve: function (module, service) {
-                var m = modules[module] || {
-                    find: function () {
-                    }
-                };
+                var m = modules[module];
 
-                var root = m.find(service);
+                var root = m && m.find(service);
                 if (!root) return root;
 
                 return _resolveCore(m, service, {});
@@ -103,61 +141,105 @@ var jsfac = (function (self) {
         };
     };
 
-    var _createModule = function (name, imports, initializer) {
+    var _createModule = function (modName, imports, debug) {
         var _registry = {};
 
         var _register = function (name, dependencies, implementation, options) {
-            if (typeof name !== typeof "string") throw 'Valid name is required.';
-            if (_utils.isNullOrWhitespace(name)) throw 'Valid name is required.';
+            if (_utils.isString(name) || _utils.isNullOrWhitespace(name))
+                throw new Error('Valid name is required.');
 
-            _registry[name] = {
-                name: name,
-                dependencies: dependencies,
-                implementation: implementation,
-                options: options || {}
-            };
+            if(!debug) {
+                _registry[name] = {
+                    name: name,
+                    dependencies: dependencies,
+                    implementation: implementation,
+                    options: options || {}
+                };
+            } else {
+                _registry[name] = {
+                    name: name,
+                    dependencies: dependencies,
+                    implementation: function() {
+                        var deps = _utils.toArray(arguments);
+                        return { module:modName, name:name, deps:deps };
+                    },
+                    options: {}
+                };
+            }
         };
-
-        initializer(_register);
-
+        
         return {
-            name: name,
+            name: modName,
             imports: imports,
             register: _register,
             find: function (service) {
                 return _registry[service];
-            }
+            },
+            register: _register,
+            registry : _registry
         };
     };
 
-    container = function () {
-
+    var _debug = function() {
         var modules = {};
         var rootScope = _scope(modules);
 
         return {
+            resolve: function (module, service) {
+                return rootScope.resolve(module, service);
+            },
+
+            graph : function() {
+                var r = [];
+                _utils.forEach(modules, function(module){
+                    _utils.forEach(module.registry, function(service){
+                        r.push(rootScope.resolve(module.name, service.name));
+                    });
+                });
+
+                return r;
+            },
+
+            createModule : function(name, imports) {
+                modules[name] = _createModule(name, imports, true);
+            },
+
+            modules: modules
+        };
+    };
+
+    var container = function () {
+        var modules = {};        
+        var rootScope = _scope(modules);
+        var debug = _debug();
+
+        return {
             module: function (name, imports, initializer) {
 
-                if (_utils.isNullOrWhitespace(name)) throw 'Valid name is required.';
-                if(typeof imports != typeof []) throw "Argument imports collection must be an array";
-                if(typeof initializer != 'function') throw "Argument initializer must be function";
+                if (_utils.isNullOrWhitespace(name)) throw new Error('Valid name is required.');
+
+                if (_utils.isUndefined(imports) && _utils.isUndefined(initializer)) {
+                    return modules[name];
+                }
 
                 var existing = modules[name];
 
                 if (!existing) {
-                    var m = _createModule(name, imports, initializer);
-                    modules[name] = m;
-                    return m;
-                }
+                    existing = modules[name] = _createModule(name, imports);
+                    debug.createModule(name, imports);
 
-                // update existing module with new imports
-                for (var i in imports) {
-                    if (existing.imports.indexOf(imports[i]) < 0) {
-                        existing.imports.push(imports[i]);
+                } else {
+                    for (var i in imports) {
+                        if (existing.imports.indexOf(imports[i]) < 0) {
+                            existing.imports.push(imports[i]);
+                        }
                     }
                 }
 
-                initializer(existing.register);
+                initializer(function(){
+                    existing.register.apply(existing, arguments);
+                    debug.modules[name].register.apply(existing, arguments);
+                });
 
                 return existing;
             },
@@ -171,19 +253,20 @@ var jsfac = (function (self) {
             // No dependencies are resolved if you manually invoke value returned by this
             // function.
             def: function (module, name) {
-                var module = modules[module] || _utils.undefined();
+                var module = modules[module] || _utils.undefined;
                 var registration = module ? module.find(name) : module;
                 return registration ? registration.implementation : registration;
+            },
+
+            debug: {
+                resolve: debug.resolve,
+                graph : debug.graph
             }
         };
-
     };
 
     var c = container();
-    self.module = c.module;
-    self.resolve = c.resolve;
-    self.def = c.def;
-
+    _utils.extend(self, c);
     self.container = container;
 
     return self;

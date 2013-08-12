@@ -8,7 +8,7 @@ describe('registration', function () {
 
     describe('register without a name', function () {
 
-        var m = container().module('m', [], function () {
+        var m = jsfac.container().module('m', [], function () {
         });
 
         it('not allowed', function () {
