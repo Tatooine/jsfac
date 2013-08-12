@@ -3,7 +3,7 @@ var jsfac = (function (self) {
         isNullOrWhitespace: function (string) {
             return !string ? true : !/\S/.test(string);
         },
-        /*undefined*/
+
         isString : function(obj){
             return typeof obj !== typeof "string";
         },
@@ -65,7 +65,7 @@ var jsfac = (function (self) {
                 return factory();
             }
 
-            if (_utils.isUndefined(sharedInstances[name]))
+            if (!_utils.isUndefined(sharedInstances[name]))
                 return sharedInstances[name];
 
             sharedInstances[name] = factory();
