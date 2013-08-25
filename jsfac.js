@@ -138,6 +138,7 @@ var jsfac = (function (self) {
         };
     };
 
+    var _id = 0;
     var _createModule = function (modName, imports, debug) {
         var _registry = {};
 
@@ -154,12 +155,22 @@ var jsfac = (function (self) {
                 };
             } else {
                 _registry[name] = {
+                    id: _id++,
                     name: name,
                     dependencies: dependencies,
                     implementation: function() {
-                        var deps = _utils.toArray(arguments);
-                        return { module:modName, name:name, deps:deps };
+                        var deps = _utils.toArray(arguments),
+                            depRefs = [],               
+                            f = _registry[name].file,
+                            r = { id: _registry[name].id, module:modName, name:name, deps:deps };
+                        _utils.forEach(deps, function(o){
+                            depRefs.push(o.id);
+                        });
+                        r.depRefs = depRefs;
+                        if(f) r.file = f;
+                        return r;
                     },
+                    file: jsfac.file,
                     options: {}
                 };
             }
