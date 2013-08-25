@@ -3,7 +3,7 @@ var jsfac = (function (self) {
         isNullOrWhitespace: function (string) {
             return !string ? true : !/\S/.test(string);
         },
-        /*undefined*/
+
         isString : function(obj){
             return typeof obj !== typeof "string";
         },
@@ -49,26 +49,29 @@ var jsfac = (function (self) {
         }
     };
 
+    // Scope has the ability to resolve a specified service
+    // based on modules configured.
     var _scope = function (modules) {
 
         var sharedInstances = {};
 
-        var getOrCreate = function (name, registration, factory) {
+        var _fqsn = function (module, service) {
+            return module.name + '-' + service;
+        };
+
+        var _getOrCreate = function (name, registration, factory) {
 
             if (registration.options.sharingMode !== 'single') {
                 return factory();
             }
 
-            if (_utils.isUndefined(sharedInstances[name]))
+            if (!_utils.isUndefined(sharedInstances[name]))
                 return sharedInstances[name];
 
             sharedInstances[name] = factory();
             return sharedInstances[name];
         };
 
-        var _fqsn = function (module, service) {
-            return module.name + '-' + service;
-        };
 
         var _findRegistration = function (module, service) {
 
@@ -94,7 +97,7 @@ var jsfac = (function (self) {
             return r;
         };
 
-        var resolveCore = function (module, service, pending) {
+        var _resolveCore = function (module, service, pending) {
 
             var ctx = _findRegistration(module, service);
             if (!ctx.match) return ctx.match;
@@ -107,17 +110,17 @@ var jsfac = (function (self) {
             var r = ctx.match;
 
             if (r.dependencies.length == 0)
-                return getOrCreate(fqsn, r, r.implementation);
+                return _getOrCreate(fqsn, r, r.implementation);
 
             pending[fqsn] = true;
 
             var deps = [];
 
             for (var dep in r.dependencies) {
-                deps.push(resolveCore(ctx.module, r.dependencies[dep], pending));
+                deps.push(_resolveCore(ctx.module, r.dependencies[dep], pending));
             }
 
-            var service = getOrCreate(fqsn, r, function () {
+            var service = _getOrCreate(fqsn, r, function () {
                 return r.implementation.apply(null, deps);
             });
 
@@ -133,7 +136,7 @@ var jsfac = (function (self) {
                 var root = m && m.find(service);
                 if (!root) return root;
 
-                return resolveCore(m, service, {});
+                return _resolveCore(m, service, {});
             }
         };
     };
@@ -179,6 +182,7 @@ var jsfac = (function (self) {
         return {
             name: modName,
             imports: imports,
+            register: _register,
             find: function (service) {
                 return _registry[service];
             },
