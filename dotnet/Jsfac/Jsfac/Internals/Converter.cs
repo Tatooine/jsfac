@@ -14,7 +14,7 @@ namespace Jsfac.Internals
                         {
                             Module = i.module,
                             Name = i.name,
-                            File = i.file,
+                            SourcePath = i.file,
                         }
                 }).ToList();
 

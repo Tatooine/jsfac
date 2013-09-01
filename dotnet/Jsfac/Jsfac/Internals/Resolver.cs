@@ -24,7 +24,7 @@ namespace Jsfac.Internals
                 var content = File.ReadAllText(file);
                 if (HasJsfacModule.IsMatch(content))
                 {
-                    Add(@"jsfac.file='" + file.Replace(@"\", @"\\") + "'");
+                    Add(@"jsfac.file='" + Path.GetFullPath(file).Replace(@"\", @"\\") + "'");
                     Add(content);
                 }
             }

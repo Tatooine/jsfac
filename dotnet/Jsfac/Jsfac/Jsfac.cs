@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using Jsfac.Internals;
 
@@ -19,6 +20,12 @@ namespace Jsfac
         public JsfacRegistry Find(string module, string name)
         {
             var itm = _registries.SingleOrDefault(r => r.Name == name && r.Module == module);
+            return itm;
+        }
+
+        public JsfacRegistry FindByPath(string path)
+        {
+            var itm = _registries.SingleOrDefault(r => string.Equals(r.SourcePath, path, StringComparison.OrdinalIgnoreCase));
             return itm;
         }
 

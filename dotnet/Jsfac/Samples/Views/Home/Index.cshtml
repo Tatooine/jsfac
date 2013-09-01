@@ -1,0 +1,16 @@
+﻿@{
+    Bundles.Reference("~/js/application.js");
+}
+
+<!DOCTYPE html>
+
+<html>
+    <head>
+        <script src="@Url.Content("~/js/jsfac.js")"></script>
+        @Bundles.RenderScripts()
+        
+    </head>
+    <body>
+        Please view source!
+    </body>
+</html>

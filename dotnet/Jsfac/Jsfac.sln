@@ -5,6 +5,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Jsfac", "Jsfac\Jsfac.csproj
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Jsfac.Tests", "Jsfac.Tests\Jsfac.Tests.csproj", "{BF9755D8-1B7D-494F-8289-9C194CAF01BD}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Jsfac.Cassette", "Jsfac.Cassette\Jsfac.Cassette.csproj", "{13961B94-DDEE-42F3-A029-EAEC65EBEFCA}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Samples", "Samples\Samples.csproj", "{21A53162-1C4F-4634-BE96-3D385E3D3F9C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -19,6 +23,14 @@ Global
 		{BF9755D8-1B7D-494F-8289-9C194CAF01BD}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{BF9755D8-1B7D-494F-8289-9C194CAF01BD}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{BF9755D8-1B7D-494F-8289-9C194CAF01BD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{13961B94-DDEE-42F3-A029-EAEC65EBEFCA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{13961B94-DDEE-42F3-A029-EAEC65EBEFCA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{13961B94-DDEE-42F3-A029-EAEC65EBEFCA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{13961B94-DDEE-42F3-A029-EAEC65EBEFCA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{21A53162-1C4F-4634-BE96-3D385E3D3F9C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{21A53162-1C4F-4634-BE96-3D385E3D3F9C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{21A53162-1C4F-4634-BE96-3D385E3D3F9C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{21A53162-1C4F-4634-BE96-3D385E3D3F9C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
