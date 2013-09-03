@@ -1,3 +1,4 @@
 .idea
 released
 .DS_Store
+node_modules
