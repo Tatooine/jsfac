@@ -117,7 +117,10 @@ var jsfac = (function (self) {
             var deps = [];
 
             for (var dep in r.dependencies) {
-                deps.push(_resolveCore(ctx.module, r.dependencies[dep], pending));
+                var d = r.dependencies[dep];
+                deps.push(
+                    d.lazy ? function() { return _resolveCore(ctx.module, d.name, pending); } 
+                    : _resolveCore(ctx.module, d.name, pending));
             }
 
             var service = _getOrCreate(fqsn, r, function () {
@@ -141,6 +144,25 @@ var jsfac = (function (self) {
         };
     };
 
+    var _dependencyDescriptions = function(dependencies){
+        var r = [];
+        for(var d in dependencies){
+            var item = dependencies[d];
+            if(typeof item === 'string'){
+                r.push({
+                  name: item,
+                  lazy: false
+                });
+            }
+            else{
+                if(!item.name) throw 'Dependency name is required';
+                r.push(item);
+            }
+        }
+
+        return r;
+    };
+
     var _createModule = function (modName, imports, debug) {
         var _registry = {};
 
@@ -151,14 +173,14 @@ var jsfac = (function (self) {
             if(!debug) {
                 _registry[name] = {
                     name: name,
-                    dependencies: dependencies,
+                    dependencies: _dependencyDescriptions(dependencies),
                     implementation: implementation,
                     options: options || {}
                 };
             } else {
                 _registry[name] = {
                     name: name,
-                    dependencies: dependencies,
+                    dependencies: _dependencyDescriptions(dependencies),
                     implementation: function() {
                         var deps = _utils.toArray(arguments);
                         return { module:modName, name:name, deps:deps };

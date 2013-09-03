@@ -1,0 +1,8 @@
+{
+    "author": "jsfac team",
+    "name": "jsfac",
+    "version": "0.2.1",
+    "devDependencies": {
+        "grunt": "~0.4.0"
+    }
+}
