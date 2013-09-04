@@ -97,6 +97,12 @@ var jsfac = (function (self) {
             return r;
         };
 
+        var _buildLazy = function(module, service){
+            return function(){
+                return _resolveCore(module, service, {});
+            };
+        };
+
         var _resolveCore = function (module, service, pending) {
 
             var ctx = _findRegistration(module, service);
@@ -117,9 +123,9 @@ var jsfac = (function (self) {
             var deps = [];
 
             for (var dep in r.dependencies) {
-                var d = r.dependencies[dep];
+                var d = r.dependencies[dep];                
                 deps.push(
-                    d.lazy ? function() { return _resolveCore(ctx.module, d.name, pending); } 
+                    d.lazy ? _buildLazy(ctx.module, d.name) 
                     : _resolveCore(ctx.module, d.name, pending));
             }
 
